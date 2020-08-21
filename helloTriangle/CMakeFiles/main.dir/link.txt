@@ -1,0 +1,1 @@
+/usr/bin/cc  -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl   CMakeFiles/main.dir/main.c.o  -o main 
