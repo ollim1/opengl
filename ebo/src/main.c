@@ -5,14 +5,16 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
 float vertices[] = {
-    0.5f,  0.5f, 0.0f,  // top right
-    0.5f, -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f,  0.5f, 0.0f   // top left 
+    0.0f,  0.67f, 0.0f,  // top
+    0.5f,  0.33f, 0.0f,  // top right
+    0.5f, -0.33f, 0.0f,  // bottom right
+    0.0f, -0.67f, 0.0f,  // bottom
+    -0.5f, -0.33f, 0.0f,  // bottom left
+    -0.5f,  0.33f, 0.0f,   // top left 
 };
 unsigned int indices[] = {  // note that we start from 0!
-    0, 3, 1,   // first triangle
-    1, 2, 3    // second triangle
+    0, 2, 4,   // first triangle
+    1, 3, 5    // second triangle
 };  
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
