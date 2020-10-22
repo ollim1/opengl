@@ -1,1 +1,3 @@
-**/badgltest
+**/*.o
+*/main
+*/badgltest
