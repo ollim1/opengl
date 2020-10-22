@@ -1,2 +1,0 @@
-/home/londes/Documents/programming/opengl/helloTriangle/build/CMakeFiles/rebuild_cache.dir
-/home/londes/Documents/programming/opengl/helloTriangle/build/CMakeFiles/edit_cache.dir
