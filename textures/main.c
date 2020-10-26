@@ -32,7 +32,7 @@ char *fragShaderSource = "#version 330 core\n"
 "uniform sampler2D texture2;\n"
 "void main()\n"
 "{\n"
-"   FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);\n"
+"   FragColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1 - TexCoord.x, TexCoord.y)), 0.2 / length(TexCoord - vec2(0.5, 0.5)));\n"
 "}\n";
 
 void printError(int code);
@@ -168,6 +168,7 @@ int main() {
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
+    stbi_set_flip_vertically_on_load(1);
     data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
