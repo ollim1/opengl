@@ -25,70 +25,13 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_Window *w = SDL_CreateWindow("test", 0, 0, 640, 480, SDL_WINDOW_OPENGL);
+    SDL_Window *w = SDL_CreateWindow("test", 0, 0, 1024, 768, SDL_WINDOW_OPENGL);
     SDL_GL_CreateContext(w);
 
     glClearColor(0.25, 0., 0., 1.);
     glEnable(GL_DEPTH_TEST);
 
-    // setting up a polygon on which to map the texture
-    float vertices[] = {
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-
-
-    vec3 cubePositions[] = {
-	{ 0.0f,  0.0f,  0.0f}, 
-	{ 2.0f,  5.0f, -15.0f}, 
-	{-1.5f, -2.2f, -2.5f},  
-	{-3.8f, -2.0f, -12.3f},  
-	{ 2.4f, -0.4f, -3.5f},  
-	{-1.7f,  3.0f, -7.5f},  
-	{ 1.3f, -2.0f, -2.5f},  
-	{ 1.5f,  2.0f, -2.5f}, 
-	{ 1.5f,  0.2f, -1.5f}, 
-	{-1.3f,  1.0f, -1.5f}  
-    };
+#include "geometry.h"
     // set up buffers to configure vertex attributes
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -113,54 +56,11 @@ int main() {
         puts("failed to load shaders");
         return -1;
     }
-    // loading textures
-    unsigned int texture1, texture2;
 
-    // texture 1
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    // texture wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // texture filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("wall.jpg", &width, &height, &nrChannels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        puts("failed to load texture file");
+    unsigned texture1, texture2;
+    if (!(texture1 = load_texture("wall.jpg", GL_RGB, GL_TEXTURE0))
+            || !(texture2 = load_texture("awesomeface.png", GL_RGBA, GL_TEXTURE1)))
         return -1;
-    }
-    stbi_image_free(data);
-
-    // texture 2
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    // texture wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // texture filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    stbi_set_flip_vertically_on_load(1);
-    data = stbi_load("awesomeface.png", &width, &height, &nrChannels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        puts("failed to load texture file");
-        return -1;
-    }
-    stbi_image_free(data);
 
     // loading a picture onto the texture
     // setting samplers for shader
@@ -237,6 +137,34 @@ int main() {
     delete_Shader(shader);
 
     return 0;
+}
+
+int load_texture(char *name, unsigned mode, unsigned slot)
+{
+    unsigned texture;
+    // allocate textures
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // texture wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glActiveTexture(slot);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(name, &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, mode, width, height, 0, mode, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        puts("failed to load texture file");
+        return 0;
+    }
+    stbi_image_free(data);
+    return texture;
 }
 
 void printError(int code)
