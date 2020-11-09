@@ -16,7 +16,6 @@ float texCoords[] = {
     0.5f, 1.0f, // top center
 };
 
-void printError(int code);
 
 int main() {
     SDL_Init(SDL_INIT_VIDEO);
@@ -25,7 +24,7 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_Window *w = SDL_CreateWindow("test", 0, 0, 1024, 768, SDL_WINDOW_OPENGL);
+    SDL_Window *w = SDL_CreateWindow("test", 0, 0, 800, 600, SDL_WINDOW_OPENGL);
     SDL_GL_CreateContext(w);
 
     glClearColor(0.25, 0., 0., 1.);
@@ -71,18 +70,26 @@ int main() {
     unsigned int viewLoc = shader_getUniformLoc(shader, "view");
     unsigned int projectionLoc = shader_getUniformLoc(shader, "projection");
 
+    // setting up camera
+    vec3 cameraPos = {0, 0, 3};
+    vec3 cameraFront = {0, 0, -1};
+    vec3 cameraUp = {0, 1, 0};
+
     SDL_Event e;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
     while(1) {
+        float currentFrame = SDL_GetTicks();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         int error = glGetError();
         if (error != GL_NO_ERROR) {
             printError(error);
         }
-        if (e.type == SDL_QUIT) {
+        if (processInput(e)) {
+            // quit program if exit input detected
             break;
-        } else if (e.type == SDL_KEYDOWN) {
-            if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_q) {
-                break;
-            }
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,13 +101,20 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         // view matrix
+        float radius = 10;
+        float camX = sin(SDL_GetTicks() / 1000.0f) * radius;
+        float camZ = cos(SDL_GetTicks() / 1000.0f) * radius;
         mat4 view = {
             {1, 0, 0, 0,},
             {0, 1, 0, 0,},
             {0, 0, 1, 0,},
             {0, 0, 0, 1,},
         };
-        glm_translate(view, (vec3){0, 0, -3});
+        glm_lookat(
+                (vec3){camX, 0, camZ},
+                (vec3){0, 0, 0},
+                (vec3){0, 1, 0},
+                view);
 
         // projection matrix
         mat4 projection;
@@ -197,3 +211,17 @@ void printError(int code)
             break;
     }
 }
+
+int processInput(SDL_Event e)
+{
+    // break loop if exit detected
+    if (e.type == SDL_QUIT) {
+        return 1;
+    } else if (e.type == SDL_KEYDOWN) {
+        if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_q) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
