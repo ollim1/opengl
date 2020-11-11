@@ -7,15 +7,19 @@
 #include <GL/glext.h>
 #define  STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
+#include "camera_t.h"
 #include "shader_t.h"
 #include "shader_source.h"
 
-float texCoords[] = {
-    0.0f, 0.0f, // lower left
-    1.0f, 0.0f, // lower right
-    0.5f, 1.0f, // top center
-};
+const float cameraSpeed = 0.5f;
+float deltaTime;
+Camera *camera;
+int KEYS[322]; // SDL keysyms
 
+int processInput(SDL_Event e);
+void printError(int code);
+int load_texture(char *name, unsigned mode, unsigned slot);
+void handleInput();
 
 int main(int argc, char **argv) {
     SDL_Init(SDL_INIT_VIDEO);
@@ -23,6 +27,15 @@ int main(int argc, char **argv) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    camera = new_camera((vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 0.0f, -1.0f}, (vec3){0.0f, 1.0f, 0.0f});
+    if (!camera) {
+        puts("failed to allocate memory for camera");
+        return -1;
+    }
+
+    memset(KEYS, 0, 322 * sizeof(int));
+    deltaTime = 0.0f;
 
     int width, height;
     width = height = 0;
@@ -81,14 +94,9 @@ int main(int argc, char **argv) {
     unsigned int viewLoc = shader_getUniformLoc(shader, "view");
     unsigned int projectionLoc = shader_getUniformLoc(shader, "projection");
 
-    // setting up camera
-    vec3 cameraPos = {0, 0, 3};
-    vec3 cameraFront = {0, 0, -1};
-    vec3 cameraUp = {0, 1, 0};
-
-    SDL_Event e;
-    float deltaTime = 0.0f;
     float lastFrame = 0.0f;
+    SDL_Event e;
+    int loopShouldTerminate = 0;
     while(1) {
         float currentFrame = SDL_GetTicks();
         deltaTime = currentFrame - lastFrame;
@@ -98,10 +106,17 @@ int main(int argc, char **argv) {
         if (error != GL_NO_ERROR) {
             printError(error);
         }
-        if (processInput(e)) {
-            // quit program if exit input detected
-            break;
+
+        while (SDL_PollEvent(&e)) {
+            if (processInput(e)) {
+                // quit program if exit input detected
+                loopShouldTerminate = 1;
+                break;
+            }
         }
+        if (loopShouldTerminate)
+            break;
+        handleInput();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -112,19 +127,18 @@ int main(int argc, char **argv) {
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         // view matrix
-        float radius = 10;
-        float camX = sin(SDL_GetTicks() / 1000.0f) * radius;
-        float camZ = cos(SDL_GetTicks() / 1000.0f) * radius;
         mat4 view = {
             {1, 0, 0, 0,},
             {0, 1, 0, 0,},
             {0, 0, 1, 0,},
             {0, 0, 0, 1,},
         };
+        vec3 front;
+        glm_vec3_add(camera->pos, camera->front, front);
         glm_lookat(
-                (vec3){camX, 0, camZ},
-                (vec3){0, 0, 0},
-                (vec3){0, 1, 0},
+                camera->pos,
+                front,
+                camera->up,
                 view);
 
         // projection matrix
@@ -149,17 +163,16 @@ int main(int argc, char **argv) {
             glm_rotate(model, glm_rad(-66), (vec3){1, 0, 0});
             glm_rotate(model, glm_rad(-66), cubePositions[i]);
 	    float angle = 20 * i;
-            glm_rotate(model, SDL_GetTicks() / 1000.0 + glm_rad(angle), (vec3){0, 0, 1});
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *) model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
         SDL_GL_SwapWindow(w);
-        SDL_PollEvent(&e);
     }
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     delete_Shader(shader);
+    delete_camera(camera);
 
     return 0;
 }
@@ -225,14 +238,47 @@ void printError(int code)
 
 int processInput(SDL_Event e)
 {
+    int mouseFirst = 1;
+    int mouseMotion = 0;
     // break loop if exit detected
     if (e.type == SDL_QUIT) {
         return 1;
-    } else if (e.type == SDL_KEYDOWN) {
+    }
+    if (e.type == SDL_KEYDOWN && e.key.keysym.sym <= 321) {
+        KEYS[e.key.keysym.sym] = 1;
         if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_q) {
             return 1;
         }
     }
+    if (e.type == SDL_MOUSEMOTION) {
+        mouseMotion = 1;
+        if (!mouseFirst) {
+
+        }
+    }
+    if (e.type == SDL_KEYUP && e.key.keysym.sym <= 321) {
+        KEYS[e.key.keysym.sym] = 0;
+    }
+
     return 0;
 }
 
+void handleInput()
+{
+    float fps = 1000.0f / deltaTime;
+    if (KEYS[SDLK_w]) {
+        vec3 temp;
+        glm_vec3_scale(camera->front, cameraSpeed / fps, temp);
+        glm_vec3_add(camera->pos, temp, camera->pos);
+    }
+    if (KEYS[SDLK_s]) {
+        vec3 temp;
+        glm_vec3_scale(camera->front, cameraSpeed / fps, temp);
+        glm_vec3_sub(camera->pos, temp, camera->pos);
+    }
+    if (KEYS[SDLK_a]) {
+    }
+    if (KEYS[SDLK_d]) {
+    }
+
+}
