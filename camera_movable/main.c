@@ -8,18 +8,20 @@
 #define  STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
 #include "camera_t.h"
+#include "mouse_t.h"
 #include "shader_t.h"
 #include "shader_source.h"
 
-const float cameraSpeed = 0.5f;
 float deltaTime;
 Camera *camera;
 int KEYS[322]; // SDL keysyms
+Mouse *mouse;
 
 int processInput(SDL_Event e);
 void printError(int code);
 int load_texture(char *name, unsigned mode, unsigned slot);
 void handleInput();
+void mouseCallback(float xpos, float ypos);
 
 int main(int argc, char **argv) {
     SDL_Init(SDL_INIT_VIDEO);
@@ -27,8 +29,9 @@ int main(int argc, char **argv) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    camera = new_camera((vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 0.0f, -1.0f}, (vec3){0.0f, 1.0f, 0.0f});
+    camera = new_camera((vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 0.0f, -1.0f}, (vec3){0.0f, 1.0f, 0.0f}, 2.0f);
     if (!camera) {
         puts("failed to allocate memory for camera");
         return -1;
@@ -39,13 +42,25 @@ int main(int argc, char **argv) {
 
     int width, height;
     width = height = 0;
-    if (argc == 3) {
+    if (argc >= 3) {
         width = atoi(argv[1]);
         height = atoi(argv[2]);
     }
     if (width == 0 || height == 0) {
         width = 800;
         height = 600;
+    }
+    float sensitivity = 0.0f;
+    if (argc == 4) {
+        sensitivity = atof(argv[3]);
+    }
+    if (sensitivity == 0.0f) {
+        sensitivity = 0.1f;
+    }
+
+    if (!(mouse = new_mouse(sensitivity, width / 2, height / 2))) {
+        puts("failed to allocate memory for mouse struct");
+        return -1;
     }
 
     SDL_Window *w = SDL_CreateWindow("test", 0, 0, width, height, SDL_WINDOW_OPENGL);
@@ -238,26 +253,26 @@ void printError(int code)
 
 int processInput(SDL_Event e)
 {
-    int mouseFirst = 1;
-    int mouseMotion = 0;
     // break loop if exit detected
-    if (e.type == SDL_QUIT) {
-        return 1;
-    }
-    if (e.type == SDL_KEYDOWN && e.key.keysym.sym <= 321) {
-        KEYS[e.key.keysym.sym] = 1;
-        if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_q) {
+    switch (e.type) {
+        case SDL_QUIT:
             return 1;
-        }
-    }
-    if (e.type == SDL_MOUSEMOTION) {
-        mouseMotion = 1;
-        if (!mouseFirst) {
-
-        }
-    }
-    if (e.type == SDL_KEYUP && e.key.keysym.sym <= 321) {
-        KEYS[e.key.keysym.sym] = 0;
+            break;
+        case SDL_KEYDOWN:
+            if (e.key.keysym.sym < 322) {
+                KEYS[e.key.keysym.sym] = 1;
+                if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_q) {
+                    return 1;
+                }
+            }
+            break;
+        case SDL_MOUSEMOTION:
+            mouseCallback(e.motion.xrel, e.motion.yrel);
+            break;
+        case SDL_KEYUP:
+            if (e.key.keysym.sym <= 321) {
+                KEYS[e.key.keysym.sym] = 0;
+            }
     }
 
     return 0;
@@ -265,20 +280,92 @@ int processInput(SDL_Event e)
 
 void handleInput()
 {
+    // translation
     float fps = 1000.0f / deltaTime;
     if (KEYS[SDLK_w]) {
         vec3 temp;
-        glm_vec3_scale(camera->front, cameraSpeed / fps, temp);
+        glm_vec3_scale(camera->front, camera->speed / fps, temp);
         glm_vec3_add(camera->pos, temp, camera->pos);
     }
     if (KEYS[SDLK_s]) {
         vec3 temp;
-        glm_vec3_scale(camera->front, cameraSpeed / fps, temp);
+        glm_vec3_scale(camera->front, camera->speed / fps, temp);
         glm_vec3_sub(camera->pos, temp, camera->pos);
     }
     if (KEYS[SDLK_a]) {
+        vec3 temp;
+        glm_vec3_crossn(camera->front, camera->up, temp);
+        glm_vec3_scale(temp, camera->speed / fps, temp);
+        glm_vec3_sub(camera->pos, temp, camera->pos);
     }
     if (KEYS[SDLK_d]) {
+        vec3 temp;
+        glm_vec3_crossn(camera->front, camera->up, temp);
+        glm_vec3_scale(temp, camera->speed / fps, temp);
+        glm_vec3_add(camera->pos, temp, camera->pos);
+    }
+    if (KEYS[SDLK_r]) {
+        vec3 temp;
+        mat4 mat = {
+            {1, 0, 0, 0,},
+            {0, 1, 0, 0,},
+            {0, 0, 1, 0,},
+            {0, 0, 0, 1,},
+        };
+        glm_vec3_crossn(camera->front, camera->up, temp);
+        glm_rotate(mat, glm_rad(-90), temp);
+        glm_mat4_mulv3(mat, camera->front, 1.0f, temp);
+        glm_vec3_scale(temp, camera->speed / fps, temp);
+        glm_vec3_sub(camera->pos, temp, camera->pos);
+    }
+    if (KEYS[SDLK_f]) {
+        vec3 temp;
+        mat4 mat = {
+            {1, 0, 0, 0,},
+            {0, 1, 0, 0,},
+            {0, 0, 1, 0,},
+            {0, 0, 0, 1,},
+        };
+        glm_vec3_crossn(camera->front, camera->up, temp);
+        glm_rotate(mat, glm_rad(-90), temp);
+        glm_mat4_mulv3(mat, camera->front, 1.0f, temp);
+        glm_vec3_scale(temp, camera->speed / fps, temp);
+        glm_vec3_add(camera->pos, temp, camera->pos);
+    }
+}
+
+void mouseCallback(float xpos, float ypos)
+{
+    if (mouse->first) {
+        mouse->lastX = xpos;
+        mouse->lastY = ypos;
+        mouse->first = 0;
     }
 
+    float xoffset = xpos - camera->lastX;
+    float yoffset = ypos - camera->lastY;
+    mouse->lastX = xpos;
+    mouse->lastY = ypos;
+    xoffset *= mouse->sensitivity;
+    yoffset *= mouse->sensitivity;
+
+    // for uninverted vertical axis
+    yoffset *= -1;
+
+    camera->yaw += xoffset;
+    camera->pitch += yoffset;
+
+    // oob check
+    if (camera->pitch > 89.9f)
+        camera->pitch  = 89.9f;
+    if (camera->pitch < -89.9f)
+        camera->pitch  = -89.9f;
+
+    vec3 front = {
+        cos(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->pitch)),
+        sin(glm_rad(camera->yaw)) * cos(glm_rad(camera->pitch)),
+    };
+    glm_normalize(front);
+    memcpy(camera->front, front, sizeof(vec3));
 }
