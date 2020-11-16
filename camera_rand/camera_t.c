@@ -1,6 +1,7 @@
 #include    "camera_t.h"
 #include    <string.h>
 
+void camera_updateVectors(struct camera_t *camera);
 struct camera_t *new_Camera(vec3 pos, vec3 front, vec3 up, float speed)
 {
     struct camera_t *camera = malloc(sizeof(struct camera_t));

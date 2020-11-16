@@ -210,6 +210,7 @@ int main(int argc, char **argv) {
     delete_Shader(shader);
     delete_Camera(camera);
     delete_Mouse(mouse);
+    free(randCubePos);
 
     return 0;
 }
