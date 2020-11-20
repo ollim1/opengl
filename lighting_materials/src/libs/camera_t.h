@@ -1,7 +1,7 @@
 #ifndef CAMERA_T_H
 #define CAMERA_T_H
-#include "include/cglm/cglm.h"
-#include "include/cglm/call.h"
+#include "../include/cglm/cglm.h"
+#include "../include/cglm/call.h"
 
 typedef struct camera_t {
     float yaw;

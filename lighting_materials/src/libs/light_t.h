@@ -1,7 +1,7 @@
 #ifndef LIGHT_T_H
 #define LIGHT_T_H
-#include "include/cglm/cglm.h"
-#include "include/cglm/call.h"
+#include "../include/cglm/cglm.h"
+#include "../include/cglm/call.h"
 typedef struct light_t {
     vec3 position;
     vec3 ambient;

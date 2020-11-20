@@ -4,8 +4,8 @@
 #include <GL/glext.h>
 #include "shader_t.h"
 #include "material_t.h"
-#include "include/cglm/cglm.h"
-#include "include/cglm/call.h"
+#include "../include/cglm/cglm.h"
+#include "../include/cglm/call.h"
 
 unsigned compileShader(char *shaderSource, unsigned shaderType);
 

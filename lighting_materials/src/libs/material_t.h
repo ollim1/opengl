@@ -1,7 +1,7 @@
 #ifndef MATERIAL_T_H
 #define MATERIAL_T_H
-#include "include/cglm/cglm.h"
-#include "include/cglm/call.h"
+#include "../include/cglm/cglm.h"
+#include "../include/cglm/call.h"
 typedef struct material_t {
     vec3 ambient;
     vec3 diffuse;

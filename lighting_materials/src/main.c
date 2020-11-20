@@ -1,21 +1,22 @@
 // Compile with -DGL_GLEXT_PROTOTYPES
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "include/cglm/cglm.h"
 #include "include/cglm/call.h"
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 // Compile with -DGL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
-#include <time.h>
 #define  STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
-#include "camera_t.h"
-#include "mouse_t.h"
-#include "shader_t.h"
-#include "material_t.h"
-#include "light_t.h"
-#include "fileload.h"
+#include "libs/camera_t.h"
+#include "libs/mouse_t.h"
+#include "libs/shader_t.h"
+#include "libs/material_t.h"
+#include "libs/light_t.h"
+#include "libs/strbuild_t.h"
+#include "libs/fileload.h"
 
 float deltaTime;
 Camera *camera;
@@ -29,21 +30,49 @@ void handleInput();
 void processMouseInput(float xpos, float ypos);
 void setupWindow();
 void moveObject(vec3 loc, float delta);
+char *getPath(char *arg);
 
 int main(int argc, char **argv) {
+    // get executable path for access to file resources with relative paths
+    char *pwd = getPath(argv[0]);
+    if (!pwd) {
+        puts("couldn't get path");
+        return -1;
+    }
+
     vec3 lightColor = {1.0f, 1.0f, 1.0f};
     vec3 objectColor = {1.0f, 0.5f, 0.31f};
     vec3 lightPos = {1.2f, 1.0f, 2.0f};
 
-    char *lightingVS = loadToStr("shaders/lightingV.glsl");
-    char *lightingFS = loadToStr("shaders/lightingF.glsl");
-    char *lightCubeFS = loadToStr("shaders/lightCubeF.glsl");
+    StringBuilder *lightingV = new_StringBuilder(pwd);
+    stringBuilder_append(lightingV, "shaders/lightingV.glsl");
+    char *lightingVPath = stringBuilder_getStr(lightingV);
+    printf("%s\n", lightingVPath);
+    char *lightingVS = loadToStr(lightingVPath);
+    delete_StringBuilder(lightingV);
+    free(lightingVPath);
+
+    StringBuilder *lightingF = new_StringBuilder(pwd);
+    stringBuilder_append(lightingF, "shaders/lightingF.glsl");
+    char *lightingFPath = stringBuilder_getStr(lightingF);
+    printf("%s\n", lightingFPath);
+    char *lightingFS = loadToStr(lightingFPath);
+    delete_StringBuilder(lightingF);
+    free(lightingFPath);
+
+    StringBuilder *lightCubeF = new_StringBuilder(pwd);
+    stringBuilder_append(lightCubeF, "shaders/lightCubeF.glsl");
+    char *lightCubeFPath = stringBuilder_getStr(lightCubeF);
+    printf("%s\n", lightCubeFPath);
+    char *lightCubeFS = loadToStr(lightCubeFPath);
+    delete_StringBuilder(lightCubeF);
+    free(lightCubeFPath);
+
     if (!lightingVS || !lightingFS || !lightCubeFS) {
         puts("failed to read shader files");
         return -1;
     }
     setupWindow();
-    srandom(time(NULL));
 
     camera = new_Camera(
             (vec3){0.0f, 0.0f, 3.0f},
@@ -87,7 +116,7 @@ int main(int argc, char **argv) {
     glClearColor(0.25, 0., 0., 1.);
     glEnable(GL_DEPTH_TEST);
 
-#include "geometry.h"
+#include "headers/geometry.h"
         
     // set up buffers to configure vertex attributes
     unsigned int VBO, cubeVAO;
@@ -243,6 +272,7 @@ int main(int argc, char **argv) {
     free(lightingVS);
     free(lightingFS);
     free(lightCubeFS);
+    free(pwd);
 
     return 0;
 }
@@ -417,4 +447,20 @@ void moveObject(vec3 loc, float delta)
     glm_rotate_at(m, pivot, glm_rad(delta / 25), axis);
     glm_mat4_mulv3(m, loc, 1, loc);
 //    printf("%5p: %f %f %f\n", loc, loc[0], loc[1], loc[2]);
+}
+
+char *getPath(char *arg)
+{
+    size_t len = strlen(arg);
+    char *pwd = calloc((len + 1), sizeof(char));
+    if (!pwd) {
+        puts("malloc failed");
+        return NULL;
+    }
+    strncpy(pwd, arg, len);
+
+    for (int i = len - 1; i >= 0 && pwd[i] != '/'; i--) {
+        pwd[i] = '\0';
+    }
+    return pwd;
 }

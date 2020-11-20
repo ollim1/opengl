@@ -4,14 +4,18 @@ CC=gcc
 PKGS=sdl2 gl
 CFLAGS+=$(shell pkg-config --cflags $(PKGS)) $(shell sdl2-config --libs) -DGL_GLEXT_PROTOTYPES -lm
 LDLIBS+=$(shell pkg-config --libs $(PKGS)) $(shell sdl2-config --libs) 
+SRCDIR=src
+BUILDDIR=build
 
-SOURCES=main.c shader_t.c camera_t.c mouse_t.c material_t.c light_t.c fileload.c
-OBJS=$(patsubst %.c,%.o,$(SOURCES))
+SOURCES=$(shell find $(SRCDIR) -name '*.c')
+OBJS=$(patsubst %.c,%.o,$(SOURCES:$(SRCDIR)/%=$(BUILDDIR)/%))
 
 $(TARGET): $(OBJS)
+	mkdir -p $(@D)
 	$(CC) -o $(TARGET) $(CFLAGS) $(OBJS) $(LDLIBS)
 
-%.o: %.c
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: clean
