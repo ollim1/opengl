@@ -44,28 +44,19 @@ int main(int argc, char **argv) {
     vec3 objectColor = {1.0f, 0.5f, 0.31f};
     vec3 lightPos = {1.2f, 1.0f, 2.0f};
 
-    StringBuilder *lightingV = new_StringBuilder(pwd);
-    stringBuilder_append(lightingV, "shaders/lightingV.glsl");
-    char *lightingVPath = stringBuilder_getStr(lightingV);
+    char *lightingVPath = getFullPath("shaders/lightingV.glsl", argv[0]);
     printf("%s\n", lightingVPath);
     char *lightingVS = loadToStr(lightingVPath);
-    delete_StringBuilder(lightingV);
     free(lightingVPath);
 
-    StringBuilder *lightingF = new_StringBuilder(pwd);
-    stringBuilder_append(lightingF, "shaders/lightingF.glsl");
-    char *lightingFPath = stringBuilder_getStr(lightingF);
+    char *lightingFPath = getFullPath("shaders/lightingF.glsl", argv[0]);
     printf("%s\n", lightingFPath);
     char *lightingFS = loadToStr(lightingFPath);
-    delete_StringBuilder(lightingF);
     free(lightingFPath);
 
-    StringBuilder *lightCubeF = new_StringBuilder(pwd);
-    stringBuilder_append(lightCubeF, "shaders/lightCubeF.glsl");
-    char *lightCubeFPath = stringBuilder_getStr(lightCubeF);
+    char *lightCubeFPath = getFullPath("shaders/lightCubeF.glsl", argv[0]);
     printf("%s\n", lightCubeFPath);
     char *lightCubeFS = loadToStr(lightCubeFPath);
-    delete_StringBuilder(lightCubeF);
     free(lightCubeFPath);
 
     if (!lightingVS || !lightingFS || !lightCubeFS) {
@@ -450,18 +441,31 @@ void moveObject(vec3 loc, float delta)
 //    printf("%5p: %f %f %f\n", loc, loc[0], loc[1], loc[2]);
 }
 
+char *getFullPath(char *rel, char *exec)
+{
+    // turn relative path of resource into full path
+    char *basePath = getPath(exec);
+    StringBuilder *sb = new_StringBuilder(basePath);
+    stringBuilder_append(sb, rel);
+    char *fullPath = stringBuilder_getStr(sb);
+    printf("%s\n", fullPath);
+    delete_StringBuilder(sb);
+    return fullPath;
+}
+
 char *getPath(char *arg)
 {
+    // get path of executable
     size_t len = strlen(arg);
-    char *pwd = calloc((len + 1), sizeof(char));
-    if (!pwd) {
+    char *str = calloc((len + 1), sizeof(char));
+    if (!str) {
         puts("malloc failed");
         return NULL;
     }
-    strncpy(pwd, arg, len);
+    strncpy(str, arg, len);
 
-    for (int i = len - 1; i >= 0 && pwd[i] != '/'; i--) {
-        pwd[i] = '\0';
+    for (int i = len - 1; i >= 0 && str[i] != '/'; i--) {
+        str[i] = '\0';
     }
-    return pwd;
+    return str;
 }
