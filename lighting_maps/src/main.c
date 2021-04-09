@@ -25,12 +25,13 @@ int KEYS[322]; // SDL keysyms
 
 int processInput(SDL_Event e);
 void printError(int code);
-int load_texture(char *name, unsigned mode, unsigned slot);
+int loadTexture(char *name, unsigned mode, unsigned slot);
 void handleInput();
 void processMouseInput(float xpos, float ypos);
 void setupWindow();
 void moveObject(vec3 loc, float delta);
 char *getPath(char *arg);
+char *getFullPath(char *rel, char *exec);
 
 int main(int argc, char **argv) {
     // get executable path for access to file resources with relative paths
@@ -148,6 +149,12 @@ int main(int argc, char **argv) {
     }
 
     // load texture
+    unsigned container_texture, container_texture_specular;
+    if (!(container_texture = loadTexture("container2.png", GL_RGB, GL_TEXTURE0))
+            || !(container_texture_specular = loadTexture("container2_specular.png", GL_RGBA, GL_TEXTURE1))) {
+        puts("failed to load textures");
+        return -1;
+    }
     // creating material struct
     Material *material;
     if (!(material = new_Material(0, (vec3){0.5f, 0.5f, 0.5f}, 32.0f))) {
@@ -233,6 +240,10 @@ int main(int argc, char **argv) {
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, container_texture);
+
         // light cube
         shader_use(lightCubeShader);
         shader_setMat4(lightCubeShader, "view", (float *) view);
@@ -269,7 +280,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int load_texture(char *name, unsigned mode, unsigned slot)
+int loadTexture(char *name, unsigned mode, unsigned slot)
 {
     unsigned texture;
     // allocate textures

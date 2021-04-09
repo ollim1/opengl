@@ -122,8 +122,7 @@ void shader_setMaterial(struct shader_t *shader, struct material_t *material)
     if (!shader || !material)
         return;
 
-    shader_setVec3(shader, "material.ambient", material->ambient);
-    shader_setVec3(shader, "material.diffuse", material->diffuse);
+    shader_setInt(shader, "material.diffuse", material->diffuse);
     shader_setVec3(shader, "material.specular", material->specular);
     shader_setFloat(shader, "material.shininess", material->shininess);
 }
