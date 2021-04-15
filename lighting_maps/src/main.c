@@ -25,7 +25,7 @@ int KEYS[322]; // SDL keysyms
 
 int processInput(SDL_Event e);
 void printError(int code);
-int loadTexture(char *name, unsigned mode, unsigned slot);
+int loadTexture(char *name, unsigned slot);
 void handleInput();
 void processMouseInput(float xpos, float ypos);
 void setupWindow();
@@ -41,8 +41,6 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    vec3 lightColor = {1.0f, 1.0f, 1.0f};
-    vec3 objectColor = {1.0f, 0.5f, 0.31f};
     vec3 lightPos = {1.2f, 1.0f, 2.0f};
 
     char *lightingVPath = getFullPath("shaders/lightingV.glsl", argv[0]);
@@ -115,17 +113,16 @@ int main(int argc, char **argv) {
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &VBO);
 
-    glBindVertexArray(cubeVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glBindVertexArray(cubeVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // position attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // light VAO
     unsigned lightCubeVAO;
@@ -133,7 +130,7 @@ int main(int argc, char **argv) {
     glBindVertexArray(lightCubeVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     // compiling shaders
@@ -149,15 +146,15 @@ int main(int argc, char **argv) {
     }
 
     // load texture
-    unsigned container_texture, container_texture_specular;
-    if (!(container_texture = loadTexture("container2.png", GL_RGB, GL_TEXTURE0))
-            || !(container_texture_specular = loadTexture("container2_specular.png", GL_RGBA, GL_TEXTURE1))) {
+    unsigned diffuse_map, specular_map;
+    if (!(diffuse_map = loadTexture("textures/container2.png", GL_TEXTURE0))
+            || !(specular_map = loadTexture("textures/container2_specular.png", GL_TEXTURE1))) {
         puts("failed to load textures");
         return -1;
     }
     // creating material struct
     Material *material;
-    if (!(material = new_Material(0, (vec3){0.5f, 0.5f, 0.5f}, 32.0f))) {
+    if (!(material = new_Material(0, 1, 32.0f))) {
         puts("failed to create material struct");
         return -1;
     }
@@ -186,11 +183,6 @@ int main(int argc, char **argv) {
         float currentFrame = SDL_GetTicks();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
-        int error = glGetError();
-        if (error != GL_NO_ERROR) {
-            printError(error);
-        }
 
         while (SDL_PollEvent(&e)) {
             if (processInput(e)) {
@@ -236,13 +228,15 @@ int main(int argc, char **argv) {
         shader_setMat4(lightingShader, "projection", (float *) projection);
         shader_setMat4(lightingShader, "model", (float *) model);
 
+        // bind textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuse_map);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specular_map);
+
         // render first cube
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, container_texture);
 
         // light cube
         shader_use(lightCubeShader);
@@ -280,7 +274,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int loadTexture(char *name, unsigned mode, unsigned slot)
+int loadTexture(char *name, unsigned slot)
 {
     unsigned texture;
     // allocate textures
@@ -298,7 +292,15 @@ int loadTexture(char *name, unsigned mode, unsigned slot)
     int width, height, nrChannels;
     unsigned char *data = stbi_load(name, &width, &height, &nrChannels, 0);
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, mode, width, height, 0, mode, GL_UNSIGNED_BYTE, data);
+        GLenum format;
+        if (nrChannels == 1)
+            format = GL_RED;
+        else if (nrChannels == 3)
+            format = GL_RGB;
+        else if (nrChannels == 4)
+            format = GL_RGBA;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
         puts("failed to load texture file");

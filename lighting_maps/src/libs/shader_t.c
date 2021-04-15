@@ -123,7 +123,7 @@ void shader_setMaterial(struct shader_t *shader, struct material_t *material)
         return;
 
     shader_setInt(shader, "material.diffuse", material->diffuse);
-    shader_setVec3(shader, "material.specular", material->specular);
+    shader_setInt(shader, "material.specular", material->specular);
     shader_setFloat(shader, "material.shininess", material->shininess);
 }
 void shader_setLight(struct shader_t *shader, struct light_t *light)
