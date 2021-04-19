@@ -14,6 +14,7 @@ void shader_setInt(struct shader_t *shader, char *name, int value);
 void shader_setFloat(struct shader_t *shader, char *name, float value);
 unsigned shader_getUniformLoc(struct shader_t *shader, char *name);
 void shader_setVec3(struct shader_t *shader, char *name, float *value);
+void shader_setVec4(struct shader_t *shader, char *name, float *value);
 void shader_setMat4(struct shader_t *shader, char *name, float *value);
 void shader_setMaterial(struct shader_t *shader, struct material_t *material);
 void shader_setLight(struct shader_t *shader, struct light_t *light);

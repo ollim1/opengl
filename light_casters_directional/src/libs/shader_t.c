@@ -83,6 +83,13 @@ void shader_setVec3(struct shader_t *shader, char *name, float *value)
     glUniform3fv(glGetUniformLocation(shader->id, name), 1, value);
 }
 
+void shader_setVec4(struct shader_t *shader, char *name, float *value)
+{
+    if (!shader || !name)
+        return;
+    glUniform4fv(glGetUniformLocation(shader->id, name), 1, value);
+}
+
 void shader_setBool(struct shader_t *shader, char *name, int value)
 {
     if (!shader || !name)
@@ -132,7 +139,7 @@ void shader_setLight(struct shader_t *shader, struct light_t *light)
         return;
 
 //    printf("%5p: %f %f %f\n", light->position, light->position[0], light->position[1], light->position[2]);
-    shader_setVec3(shader, "light.position", light->position);
+    shader_setVec4(shader, "light.direction", light->direction);
     shader_setVec3(shader, "light.ambient", light->ambient);
     shader_setVec3(shader, "light.diffuse", light->diffuse);
     shader_setVec3(shader, "light.specular", light->specular);

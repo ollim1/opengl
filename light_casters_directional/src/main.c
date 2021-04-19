@@ -107,6 +107,19 @@ int main(int argc, char **argv) {
     glEnable(GL_DEPTH_TEST);
 
 #include "headers/geometry.h"
+
+    vec3 cubePositions[] = {
+         { 0.0f,  0.0f,  0.0f},
+        { 2.0f,  5.0f, -15.0f},
+        {-1.5f, -2.2f, -2.5f},
+        {-3.8f, -2.0f, -12.3f},
+        { 2.4f, -0.4f, -3.5f},
+        {-1.7f,  3.0f, -7.5f},
+        { 1.3f, -2.0f, -2.5f},
+        { 1.5f,  2.0f, -2.5f},
+        { 1.5f,  0.2f, -1.5f},
+        {-1.3f,  1.0f, -1.5f},
+    };
         
     // set up buffers to configure vertex attributes
     unsigned int VBO, cubeVAO;
@@ -216,27 +229,29 @@ int main(int argc, char **argv) {
         camera_getProjectionMatrix(camera, 45, width, height, projection);
 
         // world transformation
-        mat4 model = {
-            {1, 0, 0, 0,},
-            {0, 1, 0, 0,},
-            {0, 0, 1, 0,},
-            {0, 0, 0, 1,},
-        };
-
         shader_use(lightingShader);
         shader_setMat4(lightingShader, "view", (float *) view);
         shader_setMat4(lightingShader, "projection", (float *) projection);
-        shader_setMat4(lightingShader, "model", (float *) model);
-
         // bind textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuse_map);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specular_map);
 
-        // render first cube
-        glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < 10; i++) {
+            glBindVertexArray(cubeVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            mat4 model = {
+                {1, 0, 0, 0,},
+                {0, 1, 0, 0,},
+                {0, 0, 1, 0,},
+                {0, 0, 0, 1,},
+            };
+            glm_translate(model, cubePositions[i]);
+            glm_rotate(model, glm_rad(-66), (vec3){1, 0, 0});
+            glm_rotate(model, glm_rad(-66), cubePositions[i]);
+            shader_setMat4(lightingShader, "model", (float *) model);
+        }
 
 //        // light cube
 //        shader_use(lightCubeShader);
