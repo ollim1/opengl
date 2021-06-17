@@ -20,6 +20,8 @@ struct Light {
     float constant;
     float linear;
     float quadratic;
+
+    float cutOff;
 };
 
 uniform Light light;

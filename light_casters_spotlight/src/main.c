@@ -17,6 +17,7 @@
 #include "libs/light_t.h"
 #include "libs/strbuild_t.h"
 #include "libs/fileload.h"
+#include <math.h>
 
 float deltaTime;
 Camera *camera;
@@ -181,7 +182,8 @@ int main(int argc, char **argv) {
                     (vec3){1.0f, 1.0f, 1.0f},
                     1.0f,
                     0.09f,
-                    0.032f))) {
+                    0.032f,
+                    cos(glm_rad(12.5f))))) {
         puts("failed to create light struct");
         return -1;
     }
