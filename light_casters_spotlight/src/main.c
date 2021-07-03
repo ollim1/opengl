@@ -1,4 +1,3 @@
-// Compile with -DGL_GLEXT_PROTOTYPES
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -176,7 +175,8 @@ int main(int argc, char **argv) {
     // creating light struct
     Light *light;
     if (!(light = new_Light(
-                    (vec4){1.2f, 1.0f, 2.0f, 1.0f},
+                    (vec3){1.2f, 1.0f, 2.0f},
+                    (vec3){-1.2f, -1.0f, -2.0f},
                     (vec3){0.2f, 0.2f, 0.2f},
                     (vec3){0.5f, 0.5f, 0.5f},
                     (vec3){1.0f, 1.0f, 1.0f},
@@ -197,6 +197,13 @@ int main(int argc, char **argv) {
     float lastFrame = 0.0f;
     SDL_Event e;
     int loopShouldTerminate = 0;
+
+    mat4 reverse = {
+        {-1.0f, 0.0f, 0.0f, 0.0f,},
+        {0.0f, -1.0f, 0.0f, 0.0f,},
+        {0.0f, 0.0f, -1.0f, 0.0f,},
+        {0.0f, 0.0f, 0.0f, -1.0f,},
+    };
     while(1) {
         float currentFrame = SDL_GetTicks();
         deltaTime = currentFrame - lastFrame;
@@ -215,9 +222,12 @@ int main(int argc, char **argv) {
 
 //        moveObject(light->position, deltaTime);
         shader_use(lightingShader);
-        moveObject(light->direction, deltaTime);
+        moveObject(light->position, deltaTime);
         shader_setLight(lightingShader, light);
         shader_setVec3(lightingShader, "viewPos", camera->pos);
+        // glm_mat4_mulv3(reverse, light->position, 1.0f, light->direction);
+        // shader_setVec3(lightingShader, "light.direction", light->direction);
+        shader_setVec3(lightingShader, "light.position", light->position);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -257,6 +267,7 @@ int main(int argc, char **argv) {
             glm_translate(model, cubePositions[i]);
             glm_rotate(model, glm_rad(-66), (vec3){1, 0, 0});
             glm_rotate(model, glm_rad(-66), cubePositions[i]);
+            glm_scale(model, (vec3){2.0, 2.0, 2.0});
             shader_setMat4(lightingShader, "model", (float *) model);
         }
 
@@ -270,7 +281,7 @@ int main(int argc, char **argv) {
             {0, 0, 1, 0,},
             {0, 0, 0, 1,},
         }, sizeof(mat4));
-        glm_translate(model, light->direction);
+        glm_translate(model, light->position);
         glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);

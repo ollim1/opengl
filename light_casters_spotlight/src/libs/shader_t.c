@@ -138,8 +138,7 @@ void shader_setLight(struct shader_t *shader, struct light_t *light)
     if (!shader || !light)
         return;
 
-//    printf("%5p: %f %f %f\n", light->position, light->position[0], light->position[1], light->position[2]);
-    shader_setVec4(shader, "light.direction", light->direction);
+    shader_setVec3(shader, "light.direction", light->direction);
     shader_setVec3(shader, "light.ambient", light->ambient);
     shader_setVec3(shader, "light.diffuse", light->diffuse);
     shader_setVec3(shader, "light.specular", light->specular);
@@ -147,4 +146,5 @@ void shader_setLight(struct shader_t *shader, struct light_t *light)
     shader_setFloat(shader, "light.constant", light->constant);
     shader_setFloat(shader, "light.linear", light->linear);
     shader_setFloat(shader, "light.quadratic", light->quadratic);
+    shader_setFloat(shader, "light.cutOff", light->cutOff);
 }
