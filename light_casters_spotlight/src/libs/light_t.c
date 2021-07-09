@@ -1,7 +1,7 @@
 #include "light_t.h"
 #include <string.h>
 
-struct light_t *new_Light(vec3 position, vec3 direction, vec3 ambient, vec3 diffuse, vec3 specular, float constant, float linear, float quadratic, float cutOff)
+struct light_t *new_Light(vec3 position, vec3 direction, vec3 ambient, vec3 diffuse, vec3 specular, float constant, float linear, float quadratic, float cutOff, float outerCutOff)
 {
     struct light_t *light = malloc(sizeof(struct light_t));
     if (!light)
@@ -17,6 +17,7 @@ struct light_t *new_Light(vec3 position, vec3 direction, vec3 ambient, vec3 diff
     light->linear = linear;
     light->quadratic = quadratic;
     light->cutOff = cutOff;
+    light->outerCutOff = outerCutOff;
 
     return light;
 }

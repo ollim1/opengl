@@ -147,4 +147,5 @@ void shader_setLight(struct shader_t *shader, struct light_t *light)
     shader_setFloat(shader, "light.linear", light->linear);
     shader_setFloat(shader, "light.quadratic", light->quadratic);
     shader_setFloat(shader, "light.cutOff", light->cutOff);
+    shader_setFloat(shader, "light.outerCutOff", light->outerCutOff);
 }

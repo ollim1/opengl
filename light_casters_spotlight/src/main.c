@@ -183,7 +183,8 @@ int main(int argc, char **argv) {
                     1.0f,
                     0.09f,
                     0.032f,
-                    cos(glm_rad(12.5f))))) {
+                    cos(glm_rad(12.5f)),
+                    cos(glm_rad(17.5f))))) {
         puts("failed to create light struct");
         return -1;
     }
